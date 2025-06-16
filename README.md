@@ -40,72 +40,105 @@ The security of RSA relies on the difficulty of factoring large numbers; thus, c
 Developed By : ANU RADHA N
 Regsiter No: 212223230018
 
-def gcd(a, b):
-    while b != 0:
-        a, b = b, a % b
-    return a
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
-def mod_exp(base, exp, mod):
-    result = 1
-    base = base % mod
-    while exp > 0:
-        if exp % 2 == 1:
-            result = (result * base) % mod
-        exp = exp >> 1
-        base = (base * base) % mod
-    return result
+// Function to check if a number is prime
+int isPrime(int n) {
+    if (n <= 1) return 0;
+    for (int i = 2; i <= sqrt(n); i++) {
+        if (n % i == 0) return 0;
+    }
+    return 1;
+}
 
-def mod_inverse(e, phi_n):
-    t, new_t = 0, 1
-    r, new_r = phi_n, e
+// Function to calculate GCD
+int gcd(int a, int b) {
+    if (b == 0) return a;
+    return gcd(b, a % b);
+}
 
-    while new_r != 0:
-        quotient = r // new_r
-        t, new_t = new_t, t - quotient * new_t
-        r, new_r = new_r, r - quotient * new_r
+// Function to calculate modular exponentiation
+long long power(long long base, long long exp, long long mod) {
+    long long res = 1;
+    base = base % mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) res = (res * base) % mod;
+        base = (base * base) % mod;
+        exp /= 2;
+    }
+    return res;
+}
 
-    if r > 1:
-        return -1  # No inverse
-    if t < 0:
-        t += phi_n
-    return t
+// Function to calculate modular inverse
+int modInverse(int a, int m) {
+    for (int x = 1; x < m; x++) {
+        if (((a % m) * (x % m)) % m == 1)
+            return x;
+    }
+    return -1;
+}
 
-def rsa_simulation():
-    print("\n***** Simulation of RSA Encryption and Decryption *****\n")
+int main() {
+    int p, q, e, message;
 
-    # Get two prime numbers
-    p = int(input("Enter a prime number (p): "))
-    q = int(input("Enter another prime number (q): "))
+    // Get input primes
+    printf("Enter first prime number (p): ");
+    scanf("%d", &p);
+    if (!isPrime(p)) {
+        printf("Error: %d is not a prime number.\n", p);
+        return 1;
+    }
 
-    n = p * q
-    phi_n = (p - 1) * (q - 1)
+    printf("Enter second prime number (q): ");
+    scanf("%d", &q);
+    if (!isPrime(q)) {
+        printf("Error: %d is not a prime number.\n", q);
+        return 1;
+    }
 
-    while True:
-        e = int(input(f"Enter a value for public key exponent (e) such that 1 < e < {phi_n}: "))
-        if 1 < e < phi_n and gcd(e, phi_n) == 1:
-            break
-        print("Invalid 'e'. Try again.")
+    int n = p * q;
+    int phi = (p - 1) * (q - 1);
 
-    d = mod_inverse(e, phi_n)
-    if d == -1:
-        print("Modular inverse does not exist for the given 'e'. Exiting.")
-        return
+    // Get public exponent
+    printf("Enter public exponent (e): ");
+    scanf("%d", &e);
 
-    print(f"Public key: (n = {n}, e = {e})")
-    print(f"Private key: (n = {n}, d = {d})")
+    if (gcd(e, phi) != 1) {
+        printf("Error: e must be co-prime to phi (%d).\n", phi);
+        return 1;
+    }
 
-    message = int(input("Enter the message to encrypt (as an integer): "))
-    if message >= n:
-        print(f"Message must be less than {n} (n). Exiting.")
-        return
+    int d = modInverse(e, phi);
+    if (d == -1) {
+        printf("Error: No modular inverse exists for e = %d and phi = %d\n", e, phi);
+        return 1;
+    }
 
-    encrypted = mod_exp(message, e, n)
-    print(f"Encrypted message: {encrypted}")
+    // Get message to encrypt
+    printf("Enter message to encrypt (as integer < %d): ", n);
+    scanf("%d", &message);
+    if (message >= n) {
+        printf("Error: Message must be less than n (%d).\n", n);
+        return 1;
+    }
 
-    decrypted = mod_exp(encrypted, d, n)
-    print(f"Decrypted message: {decrypted}")
+    // Print keys
+    printf("\nPublic Key (e, n): (%d, %d)\n", e, n);
+    printf("Private Key (d, n): (%d, %d)\n", d, n);
 
-rsa_simulation()
+    // Encrypt
+    long long cipher = power(message, e, n);
+    printf("Encrypted Ciphertext: %lld\n", cipher);
+
+    // Decrypt
+    long long decrypted = power(cipher, d, n);
+    printf("Decrypted Message: %lld\n", decrypted);
+
+    return 0;
+}
+
 
 ```
 
